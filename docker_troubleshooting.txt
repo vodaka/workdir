@@ -1,0 +1,59 @@
+====misc for docker troubleshooting====
+
+# the following error occured with running command: docker run
+
+[root@dev-paas-04 ~]# curl 10.1.201.1:5000/v2/etcd/tags/list
+{"name":"etcd","tags":["v3.1.7","v3.2.11"]}
+[root@dev-paas-04 ~]# docker run -d 10.1.201.1:5000/etcd:v3.2.11
+Unable to find image '10.1.201.1:5000/etcd:v3.2.11' locally
+Trying to pull repository 10.1.201.1:5000/etcd ... 
+v3.2.11: Pulling from 10.1.201.1:5000/etcd
+7143f324e79f: Pull complete 
+788a77c9ab63: Pull complete 
+227c09fcbd7d: Pull complete 
+68ad4dfd6171: Pull complete 
+2caee5372b70: Pull complete 
+14950a9193fe: Pull complete 
+Digest: sha256:63bae076a99743d7f6dd9e9f5b757c0378534394499426f3b3ce31a641ba4308
+Status: Downloaded newer image for 10.1.201.1:5000/etcd:v3.2.11
+5ebec5ca5b787230284dc064d2f71d1da966ba446edc1769e8b0b0b63719f825
+/usr/bin/docker-current: Error response from daemon: oci runtime error: container_linux.go:235: starting container process caused "process_linux.go:258: applying cgroup configuration for process caused \"Cannot set property TasksAccounting, or unknown property.\"".
+
+#### reason ####
+the systemd is out of date on the system which docker daemon running: so , the
+resolution is update systemd.
+
+======== systemd version with error ========
+[root@dev-paas-04 ~]# rpm -qa | grep systemd
+systemd-219-30.el7_3.8.x86_64
+systemd-sysv-219-30.el7_3.8.x86_64
+oci-systemd-hook-0.2.0-1.git05e6923.el7_6.x86_64
+systemd-python-219-30.el7_3.8.x86_64
+systemd-libs-219-30.el7_3.8.x86_64
+
+======= systemd version without error ======
+[root@dev-paas-03 bin]# rpm -qa | grep systemd
+systemd-219-42.el7.x86_64
+oci-systemd-hook-0.1.18-3.git8787307.el7_6.x86_64
+systemd-libs-219-42.el7.x86_64
+systemd-sysv-219-42.el7.x86_64
+
+======== update systemd =========
+[root@dev-paas-04 ~]# yum update systemd
+
+======== result of update ======
+[root@dev-paas-04 ~]# rpm -qa | grep systemd
+systemd-sysv-219-62.el7_6.7.x86_64
+systemd-libs-219-62.el7_6.7.x86_64
+systemd-219-62.el7_6.7.x86_64
+oci-systemd-hook-0.2.0-1.git05e6923.el7_6.x86_64
+systemd-python-219-62.el7_6.7.x86_64
+
+
+### execute docker run 
+
+[root@dev-paas-04 ~]# docker run -d 10.1.201.1:5000/etcd:v3.2.11
+35b05b1549d70148b48f0c0fb19f6a1010e683d07e160c4dc5e9ec3c3d9c4654
+
+
+
